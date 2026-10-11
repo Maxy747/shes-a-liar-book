@@ -72,15 +72,12 @@ hr.break::after{content:"·  ·  ·";color:var(--muted);letter-spacing:.3em}
 .opener .meta{font-family:var(--ui);font-size:.75rem;color:var(--muted);margin:0}
 .mh{font-family:var(--display);font-weight:400;font-size:1.6rem;margin:1rem 0 1.2rem}
 .center .page-inner{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
-.cover .page-inner{padding-top:0}
-.cover .bub{font-family:var(--ui);font-size:.9rem;background:var(--her);color:var(--her-fg);padding:.45rem .85rem;border-radius:1rem;border-bottom-left-radius:.3rem;margin:0 0 1.4rem}
-.cover .bub span{color:var(--muted);letter-spacing:.18em}
-.cover h1{font-family:var(--display);font-weight:400;font-size:clamp(2.8rem,14vw,4.6rem);line-height:.98;margin:0;letter-spacing:-.015em}
-.cover .tag-line{font-style:italic;color:var(--muted);margin:1rem 0 0;max-width:18rem;line-height:1.5;text-align:center}
-.cover .by{font-family:var(--display);font-size:1.3rem;margin:2rem 0 0}
-.cover .sub{font-family:var(--ui);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:.4rem 0 0}
-.cover .go{display:flex;flex-direction:column;gap:.5rem;margin-top:2rem;font-family:var(--ui);font-size:.85rem}
-.cover .hint{font-family:var(--ui);font-size:.75rem;color:var(--muted);margin-top:1.2rem}
+.cover{padding:0;background:#e4d9ee}
+.cover .run,.cover .folio{display:none}
+.cover .page-inner{padding:0;display:flex;flex-direction:column}
+.cover-art{display:block;width:100%;flex:1;min-height:0;object-fit:cover;object-position:center 40%}
+.cover .go{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem;padding:.8rem 1rem 1rem;font-family:var(--ui);font-size:.85rem;color:#231d2b}
+.cover .go .btn{border-color:rgb(35 29 43/.3);background:rgb(255 255 255/.55)}
 .dedi h2{font-family:var(--body);font-style:italic;font-weight:400;font-size:1.4rem;margin:0}
 .toc-row{display:grid;grid-template-columns:2rem 1fr auto;gap:.5rem;align-items:baseline;padding:.55rem .1rem;border-bottom:1px solid var(--rule);
   font-family:var(--ui);font-size:.85rem;text-decoration:none;color:inherit;cursor:pointer}
@@ -183,14 +180,11 @@ const DATA = {"chapters": [{"n": 1, "number": "Chapter One", "title": "Mutton", 
     const chs=DATA.chapters, open=chs.find(c=>!c.locked);
 
     pages.push(single(
-      '<p class="bub" aria-hidden="true">💜🍕 <span>typing…</span></p><h1>She\'s a Liar</h1>'+
-      '<p class="tag-line">A true love story, told in my words and our messages.</p><p class="by">Max</p>'+
-      '<p class="sub">Chapter One out now</p><div class="go">'+
-      '<button class="btn" data-go="front-0">Open the book</button>'+
-      (open?'<button class="btn" data-go="ch'+open.n+'">Skip to Chapter One</button>':'')+
-      '<button class="btn" id="resume" hidden>Continue where you left off</button></div>'+
-      '<p class="hint">Swipe, tap the edges, or use the arrow keys to turn pages.</p>',
-      {cls:'cover center',sect:'cover',label:'Cover'}));
+      '<img class="cover-art" src="cover.webp" alt="She&rsquo;s a Liar, by Max. Book cover with purple flowers and two chat bubbles.">'+
+      '<div class="go"><button class="btn" data-go="front-0">Open the book</button>'+
+      (open?'<button class="btn" data-go="ch'+open.n+'">Chapter One</button>':'')+
+      '<button class="btn" id="resume" hidden>Continue</button></div>',
+      {cls:'cover',sect:'cover',label:'Cover'}));
 
     DATA.front.forEach((f,i)=>{
       if(!f.body.trim()) pages.push(single('<h2>'+esc(f.title)+'</h2>',{cls:'dedi center',sect:'front-'+i,label:f.title}));
