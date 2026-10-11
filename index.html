@@ -48,9 +48,9 @@ button{font:inherit;color:inherit}
 .page[hidden]{display:none}
 .page::before{content:"";position:absolute;inset:0 auto 0 0;width:18px;background:linear-gradient(90deg,rgb(0 0 0/.07),transparent);pointer-events:none}
 .shade{position:absolute;inset:0;pointer-events:none;opacity:0;background:linear-gradient(90deg,rgb(0 0 0/.0),rgb(0 0 0/.28))}
-.run{display:flex;justify-content:space-between;font-family:var(--ui);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);min-height:1rem}
+.run{flex:none;height:1rem;line-height:1rem;overflow:hidden;display:flex;justify-content:space-between;font-family:var(--ui);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);min-height:1rem}
 .page-inner{flex:1;min-height:0;overflow:hidden;padding-top:1rem;font-size:var(--size);line-height:1.65}
-.folio{text-align:center;font-family:var(--ui);font-size:.72rem;color:var(--muted);padding-top:.5rem;font-variant-numeric:tabular-nums}
+.folio{flex:none;height:1.6rem;line-height:1.1rem;text-align:center;font-family:var(--ui);font-size:.72rem;color:var(--muted);padding-top:.5rem;font-variant-numeric:tabular-nums;overflow:hidden}
 
 .page-inner p{margin:0 0 .85em;text-align:justify;hyphens:auto;-webkit-hyphens:auto}
 .page-inner p.cont{text-indent:0}
@@ -130,7 +130,12 @@ const DATA = {"chapters": [{"n": 1, "number": "Chapter One", "title": "Mutton", 
     p.innerHTML='<div class="run"><span>She\'s a Liar</span><span>'+esc(run||'')+'</span></div><div class="page-inner"></div><div class="folio"></div><div class="shade"></div>';
     return p;
   }
-  const fits=inner=>inner.scrollHeight<=inner.clientHeight+1;
+  // A page fits when the last element's box (not its trailing margin) ends a few px above the page bottom.
+  const SLACK=6;
+  function fits(inner){
+    const last=inner.lastElementChild; if(!last) return true;
+    return last.getBoundingClientRect().bottom<=inner.getBoundingClientRect().bottom-SLACK;
+  }
   function tagStack(s){const st=[];s.replace(/<(\/?)(em|strong)>/g,(m,c,t)=>{c?st.pop():st.push(t)});return st}
   const closeAll=s=>s+tagStack(s).slice().reverse().map(t=>'</'+t+'>').join('');
   const reopen=s=>tagStack(s).map(t=>'<'+t+'>').join('');
@@ -220,7 +225,7 @@ const DATA = {"chapters": [{"n": 1, "number": "Chapter One", "title": "Mutton", 
       p.el.hidden=true; book.appendChild(p.el);
     });
     const at=keep?pages.findIndex(p=>p.keys.includes(keep)):-1;
-    idx=Math.max(0,at); pages[idx].el.hidden=false; update();
+    idx=Math.max(0,at); pages[idx].el.hidden=false; update(); requestAnimationFrame(()=>check(pages[idx].el));
 
     const r=document.getElementById('resume'), saved=store.get('sal-site-k');
     const si=saved?pages.findIndex(p=>p.keys.includes(saved)):-1;
@@ -240,7 +245,7 @@ const DATA = {"chapters": [{"n": 1, "number": "Chapter One", "title": "Mutton", 
   function go(to){
     if(busy||to<0||to>=pages.length||to===idx) return;
     const fwd=to>idx, cur=pages[idx].el, nxt=pages[to].el;
-    idx=to; update();
+    idx=to; update(); requestAnimationFrame(()=>check(nxt));
     if(reduce){cur.hidden=true;nxt.hidden=false;return}
     busy=true; nxt.hidden=false;
     const mover=fwd?cur:nxt, under=fwd?nxt:cur;
@@ -274,8 +279,24 @@ const DATA = {"chapters": [{"n": 1, "number": "Chapter One", "title": "Mutton", 
     if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)){dx<0?next():prev();return}
     if(Math.abs(dx)<8&&Math.abs(dy)<8){const r=book.getBoundingClientRect(),x=(e.clientX-r.left)/r.width;if(x>.66)next();else if(x<.34)prev()}
   });
-  let rt; addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(layout,200)});
-  (document.fonts?document.fonts.ready:Promise.resolve()).then(()=>{layout();pages.forEach(p=>p.el.hidden=true);idx=0;pages[0].el.hidden=false;update()});
+  let rt; const relayout=()=>{clearTimeout(rt);rt=setTimeout(layout,150)};
+  addEventListener('resize',relayout);
+  // Safety net: if a shown page ever spills (late font, emoji, browser quirk), re-split from the current spot.
+  let lastFix=0;
+  function check(el){
+    if(busy) return; const inner=el.querySelector('.page-inner');
+    if(Date.now()-lastFix<3000) return;                  // a block taller than a page can't be fixed; don't loop
+    if(inner.lastElementChild&&!fits(inner)&&!el.classList.contains('cover')){lastFix=Date.now();relayout()}
+  }
+  // Wait for the faces the pages actually use; a fallback font measures shorter and would clip the real one.
+  const faces=['400 1em Literata','italic 400 1em Literata','600 1em Literata','400 1em "Young Serif"'];
+  const fontsReady=document.fonts
+    ?Promise.race([Promise.all(faces.map(f=>document.fonts.load(f,'Aa'))),new Promise(r=>setTimeout(r,4000))])
+    :Promise.resolve();
+  fontsReady.then(()=>{
+    layout(); pages.forEach(p=>p.el.hidden=true); idx=0; pages[0].el.hidden=false; update();
+    if(document.fonts) document.fonts.addEventListener('loadingdone',relayout);
+  });
 })();
 </script>
 </body>
