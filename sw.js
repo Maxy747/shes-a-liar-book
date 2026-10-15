@@ -1,7 +1,7 @@
 // Service worker for the installed (home-screen) reader. Built by tools/build_site.py.
 // Page: network first, so a new chapter shows up the moment you're online; the cached copy
 // is the offline fallback. Images, icons and fonts: cache first, they never change in place.
-const VERSION = '819e321deb0f';
+const VERSION = '07c7b7253cbd';
 const CACHE = 'sal-' + VERSION;
 // Images get their own cache, versioned by their bytes, so a text-only rebuild doesn't re-download them.
 const IMG_CACHE = 'sal-img-913355b66007';
