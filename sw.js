@@ -1,7 +1,7 @@
 // Service worker for the installed (home-screen) reader. Built by tools/build_site.py.
 // Page: network first, so a new chapter shows up the moment you're online; the cached copy
 // is the offline fallback. Images, icons and fonts: cache first, they never change in place.
-const VERSION = '208e12fc1b6f';
+const VERSION = '50185b91cc40';
 const CACHE = 'sal-' + VERSION;
 // Images get their own cache, versioned by their bytes, so a text-only rebuild doesn't re-download them.
 const IMG_CACHE = 'sal-img-913355b66007';
@@ -45,6 +45,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   const sameOrigin = url.origin === location.origin;
   if (!sameOrigin && !FONT_HOSTS.includes(url.hostname)) return;
+  if (url.pathname.includes('/audio/')) return; // ~9 MB a chapter: straight from the network, never cached here
 
   if (req.mode === 'navigate') {
     e.respondWith(fetch(req).then(res => {
